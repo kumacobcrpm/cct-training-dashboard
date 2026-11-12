@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRPM CCT Training Hub</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --surface-bg: #1c1c1e;
+            --surface-hover: #242426;
+            --glass-bg: rgba(30, 30, 35, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #0a84ff;
+            --accent-soft: rgba(10, 132, 255, 0.15);
+            --text-main: #f5f5f7;
+            --text-body: #d2d2d7;
+            --text-muted: #98989d;
+            --warn: #ff9f0a;
+            --team-blue: #0a84ff;
+            --team-red: #ff453a;
+            --team-purple: #bf5af2;
+            --shadow-deep: 0 20px 40px rgba(0,0,0,0.5);
+            --shadow-light: 0 4px 15px rgba(0,0,0,0.2);
+            --fluid-easing: cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background: radial-gradient(circle at top left, #1c1c22, var(--bg-color)) fixed;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        a { color: var(--accent); text-decoration: none; transition: color 0.3s ease; }
+        a:hover { color: #5ac8fa; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px; flex-shrink: 0; background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-right: 1px solid var(--glass-border); padding: 2.5rem 1.25rem;
+            display: flex; flex-direction: column; gap: 0.5rem; z-index: 10;
+            position: sticky; top: 0; height: 100vh;
+        }
+        .sidebar h2 { font-weight: 600; margin-bottom: 1.75rem; letter-spacing: 0.5px; font-size: 1.2rem; text-align: center; }
+        .nav-btn {
+            display: flex; align-items: center; gap: 0.75rem;
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 0.9rem 1.1rem; border-radius: 14px; text-align: left;
+            cursor: pointer; transition: all 0.3s var(--fluid-easing); font-size: 0.95rem; font-weight: 500;
+        }
+        .nav-btn .ico { width: 1.25rem; text-align: center; }
+        .nav-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .nav-btn.active { background: var(--accent); color: white; box-shadow: 0 8px 16px rgba(10, 132, 255, 0.3); }
+        .nav-btn:active, .slider-btn:active, .link-card:active, .accordion-header:active, .day-pill:active { transform: scale(0.96); transition: transform 0.1s ease; }
+        .sidebar-foot { margin-top: auto; font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.5; }
+        kbd { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 1px 6px; font-size: 0.75rem; }
+
+        /* MAIN CONTENT */
+        .main-content { flex: 1; min-width: 0; padding: 3.5rem 4rem; max-width: 1100px; }
+        .section { display: none; animation: slideFade 0.5s var(--fluid-easing); }
+        .section.active { display: block; }
+        @keyframes slideFade { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        h1 { margin-bottom: 0.5rem; font-weight: 600; font-size: 2rem; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; }
+
+        /* SEARCH */
+        .search {
+            width: 100%; margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; border-radius: 14px;
+            background: var(--surface-bg); border: 1px solid var(--glass-border); color: var(--text-main); font-size: 1rem;
+        }
+        .search::placeholder { color: var(--text-muted); }
+        .search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .empty { color: var(--text-muted); padding: 1rem 0; display: none; }
+
+        /* DAY STEPPER */
+        .day-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .day-pill {
+            background: var(--surface-bg); border: 1px solid var(--glass-border); color: var(--text-muted);
+            padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+            transition: all 0.25s var(--fluid-easing);
+        }
+        .day-pill:hover { color: var(--text-main); border-color: rgba(255,255,255,0.25); }
+        .day-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .progress { height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; margin-bottom: 1.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); width: 0; transition: width 0.4s var(--fluid-easing); }
+
+        /* SLIDER */
+        .slider-container {
+            background: var(--surface-bg); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-deep);
+        }
+        .slide { display: none; }
+        .slide.active { display: block; animation: slideFade 0.4s var(--fluid-easing); }
+        .slide h3 { margin-bottom: 0.8rem; font-size: 1.6rem; font-weight: 600; letter-spacing: -0.5px; }
+        .meta-info { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-bottom: 1.25rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .chip { background: var(--accent-soft); color: #64b5ff; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: 999px; }
+        .chip.warn { background: rgba(255,159,10,0.15); color: var(--warn); }
+
+        .blocks-title { font-size: 1.1rem; margin-bottom: 12px; font-weight: 600; }
+        .building-blocks { list-style: none; margin-bottom: 25px; }
+        .building-blocks li {
+            position: relative; display: flex; gap: 0.9rem; align-items: baseline;
+            margin-bottom: 10px; color: var(--text-body); font-size: 1.02rem; line-height: 1.5;
+            background: rgba(255,255,255,0.03); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .building-blocks .dur { flex-shrink: 0; min-width: 4.5rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums; }
+        .tag { flex-shrink: 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 8px; border-radius: 6px; }
+        .tag.facilitator { background: rgba(10,132,255,0.15); color: #64b5ff; }
+        .tag.observation { background: rgba(191,90,242,0.15); color: #d69cf7; }
+        .tag.self-paced { background: rgba(48,209,88,0.15); color: #6fe08f; }
+        .building-blocks li.break { background: transparent; border-style: dashed; color: var(--text-muted); font-style: italic; }
+        .building-blocks li.break .dur { color: var(--text-muted); font-weight: 500; }
+
+        .resource { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1rem 1.2rem; color: var(--text-body); }
+        .resource strong { display: block; margin-bottom: 0.25rem; color: var(--text-main); }
+
+        .slider-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+        .slider-btn { background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: all 0.3s var(--fluid-easing); }
+        .slider-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+        .slider-btn:disabled { opacity: 0.35; cursor: default; }
+        .slider-indicator { color: var(--text-muted); font-variant-numeric: tabular-nums; font-weight: 500; }
+
+        /* ACCORDION */
+        .accordion {
+            background: var(--surface-bg); border: 1px solid var(--glass-border);
+            border-radius: 16px; margin-bottom: 1rem; overflow: hidden;
+            box-shadow: var(--shadow-light); transition: box-shadow 0.4s var(--fluid-easing);
+        }
+        .accordion-header {
+            width: 100%; padding: 1.3rem 1.4rem; cursor: pointer; font-weight: 600; font-size: 1.05rem;
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+            background: transparent; border: none; color: var(--text-main); text-align: left; transition: background 0.3s ease;
+        }
+        .accordion-header:hover { background: rgba(255,255,255,0.03); }
+        .chev { flex-shrink: 0; width: 10px; height: 10px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform 0.35s var(--fluid-easing); margin-top: -4px; }
+        .accordion.open .chev { transform: rotate(-135deg); margin-top: 4px; }
+        .accordion-content {
+            padding: 0 1.4rem; height: 0; overflow: hidden; opacity: 0;
+            transition: height 0.45s var(--fluid-easing), opacity 0.3s ease;
+            color: var(--text-body); line-height: 1.6;
+        }
+        .accordion.open { box-shadow: var(--shadow-deep); }
+        .accordion.open .accordion-content { opacity: 1; }
+        .accordion-inner { padding-bottom: 1.4rem; }
+        .accordion-content h4 { color: var(--accent); margin-top: 26px; margin-bottom: 8px; font-size: 1.08rem; font-weight: 600; }
+        .accordion-content h4:first-child { margin-top: 6px; }
+        .accordion-content p, .accordion-content ul, .accordion-content ol { margin-bottom: 14px; font-size: 1.02rem; padding-left: 16px; border-left: 3px solid rgba(10,132,255,0.2); }
+        .accordion-content ul, .accordion-content ol { padding-left: 34px; }
+        .accordion-content li { margin-bottom: 6px; }
+        mark { background: rgba(255,214,10,0.3); color: inherit; border-radius: 3px; }
+
+        /* ROUTING */
+        .assignee-list { list-style: none; padding-left: 16px !important; }
+        .assignee-list li { display: flex; align-items: center; gap: 0.6rem; }
+        .team-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .team-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* LINKS */
+        .links-group { margin-bottom: 2rem; }
+        .links-group h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 0.9rem; font-weight: 600; }
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; }
+        .link-card {
+            background: var(--surface-bg); border: 1px solid var(--glass-border);
+            padding: 1.25rem 1.4rem; border-radius: 16px; color: var(--text-main);
+            transition: all 0.4s var(--fluid-easing); display: flex; flex-direction: column; box-shadow: var(--shadow-light);
+        }
+        .link-card:hover { color: var(--text-main); transform: translateY(-4px); background: var(--surface-hover); border-color: rgba(255,255,255,0.2); box-shadow: var(--shadow-deep); }
+        .link-card span { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; font-weight: 500; }
+        .link-card .ext { font-size: 0.75rem; }
+
+        /* RESPONSIVE */
+        @media (max-width: 860px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%; height: auto; flex-direction: row; overflow-x: auto; padding: 0.75rem 16px;
+                border-right: none; border-bottom: 1px solid var(--glass-border); gap: 0.4rem;
+            }
+            .sidebar h2, .sidebar-foot { display: none; }
+            .nav-btn { white-space: nowrap; padding: 0.6rem 0.9rem; font-size: 0.88rem; }
+            .main-content { padding: 1.75rem 16px 3rem; }
+            h1 { font-size: 1.6rem; }
+            .slider-container { padding: 1.25rem; border-radius: 16px; }
+            .slide h3 { font-size: 1.3rem; }
+            .building-blocks li { flex-wrap: wrap; gap: 0.4rem 0.7rem; }
+            .slider-btn { padding: 0.6rem 1rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar" aria-label="Sections">
+        <h2>CRPM Hub</h2>
+        <button class="nav-btn active" data-tab="training"><span class="ico" aria-hidden="true">📘</span>Training Interactive</button>
+        <button class="nav-btn" data-tab="scripts"><span class="ico" aria-hidden="true">💬</span>Playbook / Call Scripts</button>
+        <button class="nav-btn" data-tab="routing"><span class="ico" aria-hidden="true">🔀</span>Aptly Routing</button>
+        <button class="nav-btn" data-tab="links"><span class="ico" aria-hidden="true">🔗</span>Workspace Links</button>
+        <div class="sidebar-foot">Tip: use <kbd>←</kbd> <kbd>→</kbd> to change training days</div>
+    </nav>
+
+    <main class="main-content">
+        <section id="training" class="section active">
+            <h1>Interactive Training Manual</h1>
+            <p class="subtitle">Shift structure: 8 hours total (7h 10m active / self-paced + 30m lunch + two 10m breaks)</p>
+            <div class="day-pills" id="day-pills" role="tablist" aria-label="Training days"></div>
+            <div class="progress" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
+            <div class="slider-container">
+                <div id="slides-wrapper" aria-live="polite"></div>
+                <div class="slider-controls">
+                    <button class="slider-btn" id="prev-btn">&#8592; Previous</button>
+                    <span class="slider-indicator" id="slide-indicator">1 / 8</span>
+                    <button class="slider-btn" id="next-btn">Next &#8594;</button>
+                </div>
+            </div>
+        </section>
+        <section id="scripts" class="section">
+            <h1>Playbook FAQs &amp; Scripts</h1>
+            <p class="subtitle">Search across every FAQ answer, or expand a category.</p>
+            <input class="search" type="search" placeholder="Search FAQs (e.g. pet fee, co-signer, sublet)" data-target="scripts-wrapper" aria-label="Search FAQs">
+            <div id="scripts-wrapper"></div>
+            <p class="empty">No matches. Try a different word.</p>
+        </section>
+        <section id="routing" class="section">
+            <h1>Aptly Ticket Routing</h1>
+            <p class="subtitle">Who to assign each ticket type to, by team color.</p>
+            <input class="search" type="search" placeholder="Search by topic or name (e.g. HOA, Hannah)" data-target="routing-wrapper" aria-label="Search routing">
+            <div id="routing-wrapper"></div>
+            <p class="empty">No matches. Try a different word.</p>
+        </section>
+        <section id="links" class="section">
+            <h1>Quick Links &amp; Resources</h1>
+            <p class="subtitle">Every link opens in a new tab.</p>
+            <input class="search" type="search" placeholder="Filter links" data-target="links-wrapper" aria-label="Filter links">
+            <div id="links-wrapper"></div>
+            <p class="empty">No matches. Try a different word.</p>
+        </section>
+    </main>
+
+    <script>
+        const TANGO = "https://app.tango.us/app/folder/92729dde-6744-4e1e-8e44-3561258df186";
+        const SHIFT_MINUTES = 480;
+
+        // Each block: [minutes, kind, label]. kind: facilitator | observation | self-paced | break
+        const trainingData = [
+            { day: "Day 1", modules: "1-2", topic: "Receptionist Fundamentals & Setup", tango: "Tango: Navigating Core Systems", blocks: [
+                [90, "facilitator", "Account & Systems Setup (Rentvine, RingCentral, Aptly)"],
+                [10, "break", "Flexible Break"],
+                [120, "observation", "Call Greeting & Control (Shadowing)"],
+                [30, "break", "Lunch Break"],
+                [120, "facilitator", "Core Principles & Empathy on Live Calls"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Email Inbox Zero Triage & Calendar Blocking"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Day 2", modules: "3-4", topic: "BDM & Maintenance Calls", tango: "Tango: Create a New Lead", blocks: [
+                [90, "facilitator", "Review Qualifying Prospective Owners"],
+                [10, "break", "Flexible Break"],
+                [120, "self-paced", "Warm Transfers to BDM Ring Group (Sandbox/Live)"],
+                [30, "break", "Lunch Break"],
+                [120, "observation", "Maintenance Emergency vs Non-Emergency Triage"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Set BDM Follow-up Calendar Invites"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Day 3", modules: "5-6", topic: "Applicant Calls & Follow-Up", tango: "Tango: Application Status", blocks: [
+                [90, "facilitator", "Process Review for Property Tours & Inquiries"],
+                [10, "break", "Flexible Break"],
+                [120, "self-paced", "Reviewing Portable Screening Reports & Vouchers"],
+                [30, "break", "Lunch Break"],
+                [120, "observation", "Handling Denied Application Calls"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Update LeadSimple Pipelines & Email Follow-ups"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Day 4", modules: "7-8", topic: "Tenant Leasing, Pets & RBP", tango: "Tango: PetScreening", blocks: [
+                [90, "self-paced", "Processing Lease Change Forms"],
+                [10, "break", "Flexible Break"],
+                [120, "facilitator", "PetScreening vs OurPetPolicy Workflows"],
+                [30, "break", "Lunch Break"],
+                [120, "observation", "Explaining Resident Benefits Package (RBP)"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Validating 3rd Party Insurance Uploads"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Day 5", modules: "9-10", topic: "Accounting & Utilities", tango: "Tango: Navigating Ledgers", blocks: [
+                [90, "facilitator", "Rent Due Dates & Grace Period Policies"],
+                [10, "break", "Flexible Break"],
+                [120, "observation", "Explaining NSF and Late Fees on Live Calls"],
+                [30, "break", "Lunch Break"],
+                [120, "self-paced", "Submitting Utility Transfer Requests"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Generate and Email Payment Links"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Day 6", modules: "11-12", topic: "Owner & Vendor Calls", tango: "Tango: Vendor Registration", blocks: [
+                [90, "facilitator", "Navigating the Owner Portal"],
+                [10, "break", "Flexible Break"],
+                [120, "observation", "Standard Lease Break vs Buy-Out Policy Execution"],
+                [30, "break", "Lunch Break"],
+                [120, "self-paced", "Vendor Onboarding & W9 Processing"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Ticket Routing to Assigned Property Managers"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Day 7", modules: "13-14", topic: "Rentvine Tech Support", tango: "Tango: Logging Risk Calls", blocks: [
+                [90, "self-paced", "Guided Password Resets in Rentvine"],
+                [10, "break", "Flexible Break"],
+                [120, "facilitator", "Escalation Triggers and Risk Call Identification"],
+                [30, "break", "Lunch Break"],
+                [120, "observation", "Shadowing Supervisor De-Escalation"],
+                [10, "break", "Flexible Break"],
+                [90, "self-paced", "Aptly Inbox Zero Cleanup"],
+                [10, "facilitator", "EOD Facilitator Check-in & Sign-off"] ] },
+            { day: "Days 8-20", modules: "16", topic: "Live Call Transition (Nesting)", tango: "Tango: Call Log Tracking", blocks: [
+                [60, "facilitator", "Review Daily Objectives & KPI Targets"],
+                [150, "self-paced", "Execute Live Calls (Heavy Support / Nesting)"],
+                [30, "break", "Lunch Break"],
+                [120, "self-paced", "Execute Live Calls (Gradual Independence)"],
+                [10, "break", "Flexible Break (Allocated as needed)"],
+                [90, "self-paced", "Execute Live Calls & Follow-ups"],
+                [30, "facilitator", "QA Check-in & Matrix Sign-Off"] ] }
+        ];
+
+        const scriptsData = [
+            {
+                title: "Applicant FAQs",
+                text: `<h4>What is available for rent?</h4><p>All of our available properties are listed on our website at <a href="https://www.coloradorpm.com/available-rental-properties-denver/" target="_blank" rel="noopener">coloradorpm.com</a>.</p>
+                <h4>What are the application requirements?</h4><p>Average credit score of a 680 or above, income to rent ratio of 2x.</p>
+                <h4>How do I apply to rent?</h4><p>Electronically through our website at coloradorpm.com.</p>
+                <h4>How much does it cost to submit an application?</h4><p>Each applicant over 18 must pay a non-refundable application fee of $42 each.</p>
+                <h4>I submitted an application, how long does it take?</h4><p>It typically takes 3 to 5 working days for us to process an application.</p>
+                <h4>How will I know if I am accepted?</h4><p>Normally within 3-5 business days. The leasing coordinator will send you an email with updates.</p>
+                <h4>Do you accept housing vouchers?</h4><p>Yes! Housing applicants must still meet all of our screening criteria minus the credit score requirement.</p>
+                <h4>I made a mistake on my application - what do I do?</h4><p>Please email <a href="mailto:pm@coloradorpm.com">pm@coloradorpm.com</a> with the updated information.</p>
+                <h4>I don’t have a job - what other income can I use?</h4><p>We accept disability, social security, housing vouchers, unemployment, and self-employed wages.</p>
+                <h4>Can I use a co-signer?</h4><p>Yes! CRPM accepts cosigners. They must apply, meet screening requirements, and sign the lease.</p>
+                <h4>My application was denied/I was not selected, why?</h4><p>Refer to your adverse action letter for specific reasons.</p>
+                <h4>Portable Screening Reports?</h4><p>Yes, accepted if completed within 30 days, provided at no cost. Email to <a href="mailto:pm@coloradorpm.com">pm@coloradorpm.com</a>. No application fee applies.</p>
+                <h4>Pet Fees &amp; Service Animals?</h4><p>Monthly pet fee of $35 or 1.5% of rent. NO fees for valid Assistance/Emotional Support Animals (must be reviewed via OurPetPolicy).</p>`
+            },
+            {
+                title: "Tenant & Leasing FAQs",
+                text: `<h4>Do I need to get Renter’s Insurance?</h4><p>Yes. At least $100,000 in liability coverage is required.</p>
+                <h4>Can I get a roommate later on?</h4><p>They must apply, pay the app fee, and be approved.</p>
+                <h4>What if I need to get out of my Lease early?</h4><ol><li>Standard Break (1 month rent fee)</li><li>Lease Buyout (one-time fee of 2x the rent)</li></ol>
+                <h4>Can I sublet?</h4><p>We do not allow subletting under any circumstances.</p>
+                <h4>Military Orders?</h4><p>Upon receipt of your written notice and government documents, we will prepare a lease amendment.</p>
+                <h4>I want to renew my lease.</h4><p>Lease renewals are sent 120 days prior to your lease expiring.</p>`
+            },
+            {
+                title: "Handling Angry Customers",
+                text: `<h4>De-escalation Steps</h4><ul><li><strong>Listen First:</strong> Allow the customer to express frustration without interrupting.</li><li><strong>Shift Perspective:</strong> Position yourself as their ally ("I want to help resolve this with you").</li><li><strong>Control Pace:</strong> If a customer is yelling, respond with a steady, soft tone to encourage them to lower their voice.</li><li><strong>Escalation:</strong> If a caller uses extreme expletives, you have permission to hang up immediately and notify a Supervisor.</li></ul>`
+            },
+            {
+                title: "Prospective Owners / BDM Inquiries",
+                text: `<h4>Routing Priority</h4><ol><li>Warm transfer to BDM Ring Group: <a href="tel:7209128061">(720) 912-8061</a></li><li>If BDM unavailable, warm transfer to Nikki.</li><li>If Nikki unavailable, schedule them on the <a href="https://calendly.com/schedule-a-convo/discovery-call-in" target="_blank" rel="noopener">BDM Calendly link</a>.</li><li>Only take a message as a last resort.</li></ol>`
+            }
+        ];
+
+        const TEAM_COLORS = { Blue: "var(--team-blue)", Red: "var(--team-red)", Purple: "var(--team-purple)" };
+        // assignees: [name, team or null, note]
+        const routingData = [
+            { title: "Maintenance", sub: "Work orders, move outs, pests", assignees: [["Billy", "Blue"], ["Julien", "Blue"], ["Miles", "Blue"], ["Danielle", "Purple"], ["Michael", "Purple"], ["Ryan", "Red"], ["Jeremy", "Red"]] },
+            { title: "Leasing", sub: "Showings, contracts, move ins, RBP", assignees: [["Irish", "Purple"], ["Hannah", "Blue"], ["Jaime", "Red"]] },
+            { title: "Accounting", sub: "Charges, payments, HOA statements", assignees: [["Sam", "Blue"], ["Aracely", "Red"], ["Makini", "Purple"]] },
+            { title: "Utilities", sub: "Gas, water, internet", assignees: [["Tracey", "Blue", "covers Danielle"], ["Charles", "Red", "covers Michael"]] },
+            { title: "Prospective Owners / BDM", sub: "", assignees: [["Tag all BDM: Renee, Haylie, Tuny", null]] },
+            { title: "Spanish Calls", sub: "", assignees: [["Aracely", null]] }
+        ];
+
+        const linksData = [
+            { name: "CCT Playbook", url: "https://docs.google.com/document/d/1IhtiGKhpYz4Z-PJ9ThAkXxVOD7AX62bB7kmJM6nmdQs/edit#heading=h.a7omq9nogbvg", type: "Docs", group: "Training & Reference" },
+            { name: "Tango Video Folder", url: TANGO, type: "Platform", group: "Training & Reference" },
+            { name: "CCT Backend Cheat Sheet", url: "https://docs.google.com/spreadsheets/d/1c3Tj_HIvniwiGpfvC_sxdHe2U14-1RC1A7cYHChSr-A/edit?usp=sharing", type: "Sheet", group: "Training & Reference" },
+            { name: "CCT Trello Board", url: "https://trello.com/b/xyeHdnIR/cct-l10", type: "Board", group: "Training & Reference" },
+            { name: "RentVine", url: "https://coloradorpm.rentvine.com/", type: "Platform", group: "Daily Systems" },
+            { name: "LeadSimple (LS)", url: "https://app.leadsimple.com/v2/inbox/unassigned", type: "Platform", group: "Daily Systems" },
+            { name: "APTLY", url: "https://app.getaptly.com/inbox/unassigned/Fc9DYrBjPDxEWen3Y", type: "Platform", group: "Daily Systems" },
+            { name: "Ring Central", url: "https://app.ringcentral.com/messages/", type: "Platform", group: "Daily Systems" },
+            { name: "2nd Nature Onboarding", url: "https://insurance.residentforms.com/pma-tenant-onboarding", type: "Platform", group: "Daily Systems" },
+            { name: "BDM Calendly", url: "https://calendly.com/schedule-a-convo/discovery-call-in", type: "Scheduling", group: "Caller Hand-offs" },
+            { name: "BDM Ring Group (Phone)", url: "tel:7209128061", type: "Phone: (720) 912-8061", group: "Caller Hand-offs" },
+            { name: "CRPM Website", url: "https://www.coloradorpm.com/", type: "Website", group: "Caller Hand-offs" },
+            { name: "Available Rentals", url: "https://www.coloradorpm.com/available-rental-properties-denver/", type: "Website", group: "Caller Hand-offs" },
+            { name: "Lease Change Form", url: "https://docs.google.com/forms/d/e/1FAIpQLScuyM9wEU88JJPIadOoJ8N6XBZA67GJHlykICda32o5s8_pkA/viewform", type: "Form", group: "Forms & Policies" },
+            { name: "Pet & Animal Policy", url: "https://scan.ourpetpolicy.com/lease-packet/EGDGUB", type: "Policy", group: "Forms & Policies" },
+            { name: "Time Off Request", url: "https://forms.gle/T1iKoQjVqVLUBsPh9", type: "Form", group: "Forms & Policies" }
+        ];
+
+        // --- HELPERS ---
+        const $ = (sel, root = document) => root.querySelector(sel);
+        const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const fmt = m => { const h = Math.floor(m / 60), r = m % 60; return h && r ? `${h}h ${r}m` : h ? `${h}h` : `${r}m`; };
+        const store = {
+            get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+            set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        };
+
+        // --- TABS ---
+        function switchTab(tabId) {
+            if (!document.getElementById(tabId)) tabId = "training";
+            $$(".section").forEach(el => el.classList.toggle("active", el.id === tabId));
+            $$(".nav-btn").forEach(el => {
+                const on = el.dataset.tab === tabId;
+                el.classList.toggle("active", on);
+                el.setAttribute("aria-current", on ? "page" : "false");
+            });
+            if (location.hash !== "#" + tabId) history.replaceState(null, "", "#" + tabId);
+        }
+
+        // --- ACCORDIONS ---
+        function makeAccordion(title, bodyHtml, searchText) {
+            const acc = document.createElement("div");
+            acc.className = "accordion";
+            acc.dataset.search = (searchText || title).toLowerCase();
+            acc.innerHTML = `
+                <button class="accordion-header" aria-expanded="false">${title}<span class="chev" aria-hidden="true"></span></button>
+                <div class="accordion-content" role="region"><div class="accordion-inner">${bodyHtml}</div></div>`;
+            $(".accordion-header", acc).addEventListener("click", () => toggleAccordion(acc));
+            return acc;
+        }
+
+        function setOpen(acc, open) {
+            const content = $(".accordion-content", acc);
+            acc.classList.toggle("open", open);
+            $(".accordion-header", acc).setAttribute("aria-expanded", open);
+            content.style.height = open ? content.scrollHeight + "px" : "0px";
+        }
+
+        function toggleAccordion(acc, exclusive = true) {
+            const willOpen = !acc.classList.contains("open");
+            if (willOpen && exclusive) $$(".accordion.open", acc.parentElement).forEach(a => a !== acc && setOpen(a, false));
+            setOpen(acc, willOpen);
+        }
+
+        function buildScripts() {
+            const wrap = $("#scripts-wrapper");
+            scriptsData.forEach(item => {
+                const tmp = document.createElement("div");
+                tmp.innerHTML = item.text;
+                wrap.appendChild(makeAccordion(esc(item.title), item.text, item.title + " " + tmp.textContent));
+            });
+        }
+
+        function buildRouting() {
+            const wrap = $("#routing-wrapper");
+            routingData.forEach(item => {
+                const rows = item.assignees.map(([name, team, note]) => `
+                    <li>${team ? `<span class="team-dot" style="background:${TEAM_COLORS[team]}" aria-hidden="true"></span>` : ""}
+                        <span>${esc(name)}</span>
+                        ${team ? `<span class="team-label">${team}${note ? " · " + esc(note) : ""}</span>` : ""}</li>`).join("");
+                const head = esc(item.title) + (item.sub ? ` <span class="team-label" style="font-weight:500">${esc(item.sub)}</span>` : "");
+                const searchText = [item.title, item.sub, ...item.assignees.flat()].filter(Boolean).join(" ");
+                wrap.appendChild(makeAccordion(`<span>${head}</span>`, `<ul class="assignee-list">${rows}</ul>`, searchText));
+            });
+        }
+
+        // --- LINKS ---
+        function buildLinks() {
+            const wrap = $("#links-wrapper");
+            const groups = [...new Set(linksData.map(l => l.group))];
+            groups.forEach(g => {
+                const section = document.createElement("div");
+                section.className = "links-group";
+                section.innerHTML = `<h3>${esc(g)}</h3><div class="links-grid"></div>`;
+                const grid = $(".links-grid", section);
+                linksData.filter(l => l.group === g).forEach(item => {
+                    const a = document.createElement("a");
+                    a.href = item.url;
+                    a.className = "link-card";
+                    a.dataset.search = (item.name + " " + item.type + " " + g).toLowerCase();
+                    const isTel = item.url.startsWith("tel:");
+                    if (!isTel) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+                    a.innerHTML = `<strong>${esc(item.name)}${isTel ? "" : ' <span class="ext" aria-label="opens in new tab">↗</span>'}</strong><span>${esc(item.type)}</span>`;
+                    grid.appendChild(a);
+                });
+                wrap.appendChild(section);
+            });
+        }
+
+        // --- SEARCH / FILTER ---
+        function clearMarks(root) {
+            $$("mark", root).forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+            root.normalize();
+        }
+        function highlight(root, q) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const hits = [];
+            while (walker.nextNode()) if (walker.currentNode.nodeValue.toLowerCase().includes(q)) hits.push(walker.currentNode);
+            hits.forEach(node => {
+                const frag = document.createDocumentFragment();
+                const text = node.nodeValue, lower = text.toLowerCase();
+                let i = 0, j;
+                while ((j = lower.indexOf(q, i)) !== -1) {
+                    frag.append(text.slice(i, j));
+                    const m = document.createElement("mark"); m.textContent = text.slice(j, j + q.length); frag.append(m);
+                    i = j + q.length;
+                }
+                frag.append(text.slice(i));
+                node.replaceWith(frag);
+            });
+        }
+        function applyFilter(input) {
+            const wrap = document.getElementById(input.dataset.target);
+            const q = input.value.trim().toLowerCase();
+            const items = $$(".accordion, .link-card", wrap);
+            let shown = 0;
+            items.forEach(el => {
+                const match = !q || el.dataset.search.includes(q);
+                el.style.display = match ? "" : "none";
+                if (match) shown++;
+                if (el.classList.contains("accordion")) {
+                    const inner = $(".accordion-inner", el);
+                    clearMarks(inner);
+                    if (q && match) { highlight(inner, q); setOpen(el, true); }
+                    else if (!q) setOpen(el, false);
+                }
+            });
+            $$(".links-group", wrap).forEach(g => g.style.display = $$(".link-card", g).some(c => c.style.display !== "none") ? "" : "none");
+            input.closest(".section").querySelector(".empty").style.display = shown ? "none" : "block";
+        }
+
+        // --- TRAINING SLIDER ---
+        let currentSlide = 0;
+        function buildSlider() {
+            const wrapper = $("#slides-wrapper");
+            const pills = $("#day-pills");
+            trainingData.forEach((item, index) => {
+                const active = item.blocks.filter(b => b[1] !== "break").reduce((s, b) => s + b[0], 0);
+                const total = item.blocks.reduce((s, b) => s + b[0], 0);
+                const totalChip = total === SHIFT_MINUTES
+                    ? `<span class="chip">Total: ${fmt(total)}</span>`
+                    : `<span class="chip warn" title="Blocks add up to ${fmt(total)}, not 8h">Total: ${fmt(total)} (check schedule)</span>`;
+
+                const rows = item.blocks.map(([min, kind, label]) => kind === "break"
+                    ? `<li class="break"><span class="dur">${fmt(min)}</span><span>☕ ${esc(label)}</span></li>`
+                    : `<li><span class="dur">${fmt(min)}</span><span class="tag ${kind}">${kind.replace("-", " ")}</span><span>${esc(label)}</span></li>`
+                ).join("");
+
+                const slide = document.createElement("div");
+                slide.className = "slide";
+                slide.innerHTML = `
+                    <h3>${esc(item.day)}: ${esc(item.topic)}</h3>
+                    <div class="meta-info">
+                        <span class="chip">Modules ${esc(item.modules)}</span>
+                        <span class="chip">Active: ${fmt(active)}</span>
+                        ${totalChip}
+                    </div>
+                    <p class="blocks-title">Daily Building Blocks</p>
+                    <ul class="building-blocks">${rows}</ul>
+                    <div class="resource"><strong>Suggested Resource</strong>
+                        <a href="${TANGO}" target="_blank" rel="noopener noreferrer">${esc(item.tango)} ↗</a></div>`;
+                wrapper.appendChild(slide);
+
+                const pill = document.createElement("button");
+                pill.className = "day-pill";
+                pill.setAttribute("role", "tab");
+                pill.textContent = item.day;
+                pill.addEventListener("click", () => goToSlide(index));
+                pills.appendChild(pill);
+            });
+            const saved = parseInt(store.get("cct-slide"), 10);
+            goToSlide(Number.isInteger(saved) && saved >= 0 && saved < trainingData.length ? saved : 0);
+        }
+
+        function goToSlide(i) {
+            currentSlide = Math.max(0, Math.min(trainingData.length - 1, i));
+            $$(".slide").forEach((s, idx) => s.classList.toggle("active", idx === currentSlide));
+            $$(".day-pill").forEach((p, idx) => {
+                p.classList.toggle("active", idx === currentSlide);
+                p.setAttribute("aria-selected", idx === currentSlide);
+            });
+            $("#slide-indicator").textContent = `${currentSlide + 1} / ${trainingData.length}`;
+            $("#progress-bar").style.width = `${((currentSlide + 1) / trainingData.length) * 100}%`;
+            $("#prev-btn").disabled = currentSlide === 0;
+            $("#next-btn").disabled = currentSlide === trainingData.length - 1;
+            store.set("cct-slide", currentSlide);
+        }
+
+        // --- INIT ---
+        document.addEventListener("DOMContentLoaded", () => {
+            buildSlider();
+            buildScripts();
+            buildRouting();
+            buildLinks();
+
+            $$(".nav-btn").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+            $("#prev-btn").addEventListener("click", () => goToSlide(currentSlide - 1));
+            $("#next-btn").addEventListener("click", () => goToSlide(currentSlide + 1));
+            $$(".search").forEach(input => input.addEventListener("input", () => applyFilter(input)));
+
+            document.addEventListener("keydown", e => {
+                if (!$("#training").classList.contains("active")) return;
+                if (/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+                if (e.key === "ArrowRight") goToSlide(currentSlide + 1);
+                if (e.key === "ArrowLeft") goToSlide(currentSlide - 1);
+            });
+            window.addEventListener("hashchange", () => switchTab(location.hash.slice(1)));
+            window.addEventListener("resize", () => $$(".accordion.open").forEach(a => setOpen(a, true)));
+
+            switchTab(location.hash.slice(1) || "training");
+        });
+    </script>
+</body>
+</html>
